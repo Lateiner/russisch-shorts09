@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --drop-zone-bg: #f0f2f5;
+            --correct-color: #27ae60;
+            --wrong-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary-color); }
+        p.instruction { text-align: center; margin-bottom: 20px; font-style: italic; }
+
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 650px) {
+            .exercise-grid { grid-template-columns: 1fr; }
+        }
+
+        .drop-zone-item {
+            background: var(--drop-zone-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .russian-text {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            min-height: 40px;
+        }
+
+        .drop-target {
+            min-height: 50px;
+            background: rgba(255,255,255,0.7);
+            border: 2px dashed #bbb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .draggables-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-content: flex-start;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .draggable {
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: grab;
+            text-align: center;
+            user-select: none;
+            touch-action: none;
+            transition: transform 0.2s;
+        }
+
+        .draggable:active { cursor: grabbing; }
+
+        /* Feedback Styles */
+        .correct { border-color: var(--correct-color); background-color: #e8f5e9; }
+        .wrong { border-color: var(--wrong-color); background-color: #ffebee; }
+
+        #reset-btn {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 30px auto 0;
+            padding: 12px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #reset-btn:hover { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Übung: ПРИКИНЬ</h2>
+    <p class="instruction">Was passt? Ziehe die Antwort in das Feld oder tippe beide nacheinander an.</p>
+
+    <div class="exercise-grid">
+        <div class="drop-zones-container">
+            <div class="drop-zone-item" data-answer="Echt jetzt?">
+                <span class="russian-text">ПРИКИНЬ, в этом магазине нет хлеба!</span>
+                <div class="drop-target"></div>
+            </div>
+            <div class="drop-zone-item" data-answer="Wahnsinn!">
+                <span class="russian-text">ПРИКИНЬ, Маша поступила в университет!</span>
+                <div class="drop-target"></div>
+            </div>
+            <div class="drop-zone-item" data-answer="Nicht dein Ernst!">
+                <span class="russian-text">ПРИКИНЬ, я вчера встретил нашего учителя в кино.</span>
+                <div class="drop-target"></div>
+            </div>
+        </div>
+
+        <div class="draggables-container" id="source-container">
+            <div class="draggable" draggable="true" id="d1">Wahnsinn!</div>
+            <div class="draggable" draggable="true" id="d2">Echt jetzt?</div>
+            <div class="draggable" draggable="true" id="d3">Nicht dein Ernst!</div>
+        </div>
+    </div>
+
+    <button id="reset-btn">Neustart</button>
+</div>
+
+<script>
+    const draggables = document.querySelectorAll('.draggable');
+    const dropTargets = document.querySelectorAll('.drop-target');
+    const sourceContainer = document.getElementById('source-container');
+    let selectedElement = null;
+
+    // Funktion zur Überprüfung
+    function checkFeedback(zone) {
+        const target = zone.querySelector('.drop-target');
+        const correctAnswer = zone.getAttribute('data-answer');
+        const droppedItem = target.querySelector('.draggable');
+
+        if (!droppedItem) {
+            zone.classList.remove('correct', 'wrong');
+            return;
+        }
+
+        if (droppedItem.innerText === correctAnswer) {
+            zone.classList.add('correct');
+            zone.classList.remove('wrong');
+        } else {
+            zone.classList.add('wrong');
+            zone.classList.remove('correct');
+        }
+    }
+
+    // Drag & Drop Events (Desktop)
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => draggable.classList.add('dragging'));
+        draggable.addEventListener('dragend', () => draggable.classList.remove('dragging'));
+    });
+
+    dropTargets.forEach(target => {
+        target.addEventListener('dragover', e => e.preventDefault());
+        target.addEventListener('drop', e => {
+            e.preventDefault();
+            const dragging = document.querySelector('.dragging');
+            if (dragging) {
+                target.appendChild(dragging);
+                checkFeedback(target.parentElement);
+            }
+        });
+    });
+
+    sourceContainer.addEventListener('dragover', e => e.preventDefault());
+    sourceContainer.addEventListener('drop', e => {
+        const dragging = document.querySelector('.dragging');
+        sourceContainer.appendChild(dragging);
+        // Feedback entfernen, wenn zurückgelegt
+        document.querySelectorAll('.drop-zone-item').forEach(zone => checkFeedback(zone));
+    });
+
+    // Touch/Click Support (Mobile & Tablet)
+    draggables.forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(selectedElement) selectedElement.style.outline = "none";
+            selectedElement = el;
+            el.style.outline = "3px solid #ff9800";
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        const targetZone = e.target.closest('.drop-target');
+        const isSource = e.target.closest('#source-container');
+
+        if (selectedElement && targetZone) {
+            targetZone.appendChild(selectedElement);
+            selectedElement.style.outline = "none";
+            checkFeedback(targetZone.parentElement);
+            selectedElement = null;
+        } else if (selectedElement && isSource) {
+            sourceContainer.appendChild(selectedElement);
+            selectedElement.style.outline = "none";
+            document.querySelectorAll('.drop-zone-item').forEach(zone => checkFeedback(zone));
+            selectedElement = null;
+        }
+    });
+
+    // Neustart Funktion
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        draggables.forEach(d => {
+            sourceContainer.appendChild(d);
+            d.style.outline = "none";
+        });
+        document.querySelectorAll('.drop-zone-item').forEach(zone => {
+            zone.classList.remove('correct', 'wrong');
+        });
+        selectedElement = null;
+    });
+</script>
+
+</body>
+</html>
