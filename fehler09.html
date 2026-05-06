@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotspot-Quiz: 6 Situationen</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --correct-bg: #dff9fb;
+            --correct-border: #27ae60;
+            --wrong-bg: #ffeaa7;
+            --wrong-border: #e67e22;
+            --bg: #f5f6fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        h2 { text-align: center; color: var(--primary); }
+        
+        .progress-bar {
+            background: #eee;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            background: #3498db;
+            width: 16.6%;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .scene-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .context-info {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .visual-area {
+            background: #f0f2f5;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .speech-bubble {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 15px;
+            position: relative;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .word-option {
+            font-weight: bold;
+            color: #e74c3c;
+            cursor: pointer;
+            border-bottom: 2px dashed #e74c3c;
+            padding: 0 4px;
+        }
+
+        #feedback-area {
+            display: none;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .nav-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #next-btn { background: #3498db; color: white; display: none; }
+        .reset-btn { background: #636e72; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Finde den Fehler!</h2>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div class="scene-card">
+        <span class="context-info" id="context-desc">Situation 1: Gespräch mit dem Chef</span>
+        <div class="visual-area">
+            <div id="char-left">👨‍💼</div>
+            <div>⚡</div>
+            <div id="char-right">🧑‍💻</div>
+        </div>
+
+        <div class="speech-bubble" id="bubble-content">
+            Здравствуйте! <span class="word-option" onclick="check(true)">ПРИКИНЬ</span>, я закончил работу.
+        </div>
+
+        <div id="feedback-area"></div>
+
+        <div class="nav-btns">
+            <button class="reset-btn" onclick="resetApp()">Neustart</button>
+            <button id="next-btn" onclick="loadNext()">Nächste Situation</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const situations = [
+        {
+            context: "Situation 1: Offizielles Gespräch im Büro",
+            chars: ["👨‍💼", "⚡", "🧑‍💻"],
+            text: "Здравствуйте! <span class='word-option' onclick='check(true)'>ПРИКИНЬ</span>, я закончил отчёт.",
+            correct: true, // true bedeutet "Ja, das ist ein Fehler"
+            explanation: "Richtig! ПРИКИНЬ ist zu informell für den Chef. Sag lieber 'Представляете'."
+        },
+        {
+            context: "Situation 2: Mit der besten Freundin im Café",
+            chars: ["👩‍🦰", "☕", "👱‍♀️"],
+            text: "Маша, <span class='word-option' onclick='check(false)'>ПРИКИНЬ</span>, он мне не позвонил!",
+            correct: false,
+            explanation: "Nein, das ist kein Fehler! Unter Freunden ist ПРИКИНЬ genau das richtige Wort."
+        },
+        {
+            context: "Situation 3: Am Schalter im Bürgeramt",
+            chars: ["👵", "📄", "👤"],
+            text: "Добрый день! <span class='word-option' onclick='check(true)'>ПРИКИНЬ</span>, я потерял паспорт.",
+            correct: true,
+            explanation: "Richtig! Gegenüber Beamten ist dieser Slang sehr unhöflich."
+        },
+        {
+            context: "Situation 4: In einem Videospiel-Chat mit Kumpels",
+            chars: ["🎮", "💬", "🎧"],
+            text: "Чувак, <span class='word-option' onclick='check(false)'>ПРИКИНЬ</span>, мы выиграли!",
+            correct: false,
+            explanation: "Kein Fehler. Im Gaming-Kontext und unter 'Dudes' (Чуваки) ist es perfekt."
+        },
+        {
+            context: "Situation 5: Ein Enkel spricht mit seiner strengen Oma",
+            chars: ["👵", "👵", "👦"],
+            text: "Бабушка, <span class='word-option' onclick='check(true)'>ПРИКИНЬ</span>, я получил пятёрку!",
+            correct: true,
+            explanation: "Richtig! In Russland ist die Sprache gegenüber der älteren Generation meist respektvoller (V-Form)."
+        },
+        {
+            context: "Situation 6: Ein junger Mann spricht seinen Lehrer an",
+            chars: ["👨‍🏫", "🏫", "👱"],
+            text: "Сергей Петрович, <span class='word-option' onclick='check(true)'>ПРИКИНЬ</span>, я забыл тетрадь.",
+            correct: true,
+            explanation: "Richtig! Lehrer werden mit Vorname + Vatersname und formell angesprochen. ПРИКИНЬ passt hier gar nicht."
+        }
+    ];
+
+    let current = 0;
+
+    function check(isError) {
+        const feedback = document.getElementById('feedback-area');
+        const nextBtn = document.getElementById('next-btn');
+        feedback.style.display = 'block';
+        
+        if (isError === situations[current].correct) {
+            feedback.className = 'success';
+            feedback.innerHTML = "<strong>Gut erkannt!</strong> " + situations[current].explanation;
+            feedback.style.backgroundColor = "var(--correct-bg)";
+            feedback.style.border = "2px solid var(--correct-border)";
+        } else {
+            feedback.className = 'wrong';
+            feedback.innerHTML = "<strong>Opps!</strong> " + situations[current].explanation;
+            feedback.style.backgroundColor = "var(--wrong-bg)";
+            feedback.style.border = "2px solid var(--wrong-border)";
+        }
+        nextBtn.style.display = 'block';
+    }
+
+    function loadNext() {
+        current++;
+        if (current >= situations.length) {
+            alert("Klasse! Du hast alle Situationen gemeistert.");
+            resetApp();
+            return;
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('context-desc').innerText = situations[current].context;
+        document.getElementById('char-left').innerText = situations[current].chars[0];
+        document.getElementById('char-right').innerText = situations[current].chars[2];
+        document.getElementById('bubble-content').innerHTML = situations[current].text;
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('progress-fill').style.width = ((current + 1) / situations.length * 100) + "%";
+    }
+
+    function resetApp() {
+        current = 0;
+        updateUI();
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
