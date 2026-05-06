@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Richtig oder Falsch: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .progress { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 25px; }
+
+        .statement-card {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn-true { background-color: var(--success); color: white; }
+        .btn-false { background-color: var(--error); color: white; }
+
+        button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        #feedback {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .btn-next {
+            display: block;
+            margin: 20px auto 0;
+            background: var(--primary);
+            color: white;
+            padding: 10px 30px;
+            display: none;
+        }
+
+        .btn-reset {
+            display: block;
+            margin: 20px auto 0;
+            background: #636e72;
+            color: white;
+            padding: 10px 30px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .options { grid-template-columns: 1fr; }
+            .statement-card { font-size: 1.1em; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Wahr oder Falsch?</h2>
+    <div class="progress" id="progress">Aussage 1 von 5</div>
+
+    <div class="statement-card" id="statement">
+        Lädt...
+    </div>
+
+    <div class="options">
+        <button class="btn-true" id="true-btn" onclick="check(true)">WAHR</button>
+        <button class="btn-false" id="false-btn" onclick="check(false)">FALSCH</button>
+    </div>
+
+    <div id="feedback"></div>
+    <button class="btn-next" id="next-btn" onclick="nextQuestion()">Nächste Frage</button>
+    <button class="btn-reset" id="reset-btn" onclick="resetQuiz()">Übung Neustarten</button>
+</div>
+
+<script>
+    const questions = [
+        { q: "Das Wort ПРИКИНЬ wird oft von Jugendlichen genutzt.", a: true, info: "Richtig! Es ist typische Jugendsprache." },
+        { q: "ПРИКИНЬ nutzt man nur bei traurigen Nachrichten.", a: false, info: "Falsch! Man nutzt es bei jeder Art von Überraschung." },
+        { q: "Man kann ПРИКИНЬ mit 'Stell dir mal vor' übersetzen.", a: true, info: "Korrekt! Das ist die gängigste Bedeutung." },
+        { q: "In einem offiziellen Brief ist ПРИКИНЬ sehr angemessen.", a: false, info: "Falsch! Es ist Umgangssprache und im Offiziellen unpassend." },
+        { q: "Wenn jemand ПРИКИНЬ sagt, erwartet er meist eine Reaktion.", a: true, info: "Richtig! Der Sprecher möchte Aufmerksamkeit erregen." }
+    ];
+
+    let current = 0;
+
+    function loadQuestion() {
+        document.getElementById('statement').innerText = questions[current].q;
+        document.getElementById('progress').innerText = `Aussage ${current + 1} von ${questions.length}`;
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('true-btn').disabled = false;
+        document.getElementById('false-btn').disabled = false;
+        document.getElementById('statement').style.borderColor = "#eee";
+    }
+
+    function check(userAnswer) {
+        const correct = questions[current].a;
+        const feedback = document.getElementById('feedback');
+        const card = document.getElementById('statement');
+        
+        document.getElementById('true-btn').disabled = true;
+        document.getElementById('false-btn').disabled = true;
+
+        feedback.style.display = 'block';
+        if (userAnswer === correct) {
+            feedback.innerText = "✔ " + questions[current].info;
+            feedback.style.color = "var(--success)";
+            card.style.borderColor = "var(--success)";
+        } else {
+            feedback.innerText = "✘ " + questions[current].info;
+            feedback.style.color = "var(--error)";
+            card.style.borderColor = "var(--error)";
+        }
+
+        if (current < questions.length - 1) {
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            document.getElementById('reset-btn').style.display = 'block';
+        }
+    }
+
+    function nextQuestion() {
+        current++;
+        loadQuestion();
+    }
+
+    function resetQuiz() {
+        current = 0;
+        document.getElementById('reset-btn').style.display = 'none';
+        loadQuestion();
+    }
+
+    // Start
+    loadQuestion();
+</script>
+
+</body>
+</html>
