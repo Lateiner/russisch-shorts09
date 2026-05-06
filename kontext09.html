@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontext-Check: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --text-main: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 30px;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.95em;
+        }
+
+        .scenario-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, border 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .scenario-text {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        @media (hover: hover) {
+            button:hover { background: #f1f2f6; }
+        }
+
+        button.selected-correct {
+            background-color: var(--correct) !important;
+            color: white;
+            border-color: var(--correct);
+        }
+
+        button.selected-wrong {
+            background-color: var(--wrong) !important;
+            color: white;
+            border-color: var(--wrong);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: none;
+        }
+
+        .reset-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        #reset-btn {
+            background: #636e72;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Kontext-Check: ПРИКИНЬ</h2>
+    <p class="instruction">
+        In welchen Situationen ist der Ausdruck <strong>ПРИКИНЬ</strong> angemessen? 
+        Wähle für jedes Szenario aus.
+    </p>
+
+    <div id="quiz-box">
+        <!-- Szenario 1 -->
+        <div class="scenario-card" data-correct="yes">
+            <span class="scenario-text">Du triffst einen alten Schulfreund im Park und willst ihm eine Überraschung erzählen.</span>
+            <div class="button-group">
+                <button onclick="checkAnswer(this, 'yes')">Angemessen</button>
+                <button onclick="checkAnswer(this, 'no')">Unangemessen</button>
+            </div>
+            <div class="feedback">Richtig! Unter Freunden ist dieser umgangssprachliche Ausdruck perfekt.</div>
+        </div>
+
+        <!-- Szenario 2 -->
+        <div class="scenario-card" data-correct="no">
+            <span class="scenario-text">Du bist bei einem offiziellen Vorstellungsgespräch in einer Bank.</span>
+            <div class="button-group">
+                <button onclick="checkAnswer(this, 'yes')">Angemessen</button>
+                <button onclick="checkAnswer(this, 'no')">Unangemessen</button>
+            </div>
+            <div class="feedback">Richtig! Das Wort ist zu informell (Slang) für ein offizielles Gespräch.</div>
+        </div>
+
+        <!-- Szenario 3 -->
+        <div class="scenario-card" data-correct="yes">
+            <span class="scenario-text">Du chattest mit einem russischen Freund auf WhatsApp über dein Wochenende.</span>
+            <div class="button-group">
+                <button onclick="checkAnswer(this, 'yes')">Angemessen</button>
+                <button onclick="checkAnswer(this, 'no')">Unangemessen</button>
+            </div>
+            <div class="feedback">Genau! In informellen Textnachrichten wird es sehr häufig genutzt.</div>
+        </div>
+
+        <!-- Szenario 4 -->
+        <div class="scenario-card" data-correct="no">
+            <span class="scenario-text">Du musst auf dem Bürgeramt ein offizielles Dokument beantragen.</span>
+            <div class="button-group">
+                <button onclick="checkAnswer(this, 'yes')">Angemessen</button>
+                <button onclick="checkAnswer(this, 'no')">Unangemessen</button>
+            </div>
+            <div class="feedback">Richtig! Gegenüber Beamten sollte man eher förmlich sprechen.</div>
+        </div>
+    </div>
+
+    <div class="reset-container">
+        <button id="reset-btn" onclick="resetQuiz()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    function checkAnswer(button, choice) {
+        const card = button.closest('.scenario-card');
+        const correctAnswer = card.getAttribute('data-correct');
+        const feedback = card.querySelector('.feedback');
+        const buttons = card.querySelectorAll('button');
+
+        // Deaktiviere weitere Klicks für diese Karte
+        buttons.forEach(btn => btn.style.pointerEvents = 'none');
+
+        if (choice === correctAnswer) {
+            button.classList.add('selected-correct');
+            feedback.style.display = 'block';
+            feedback.style.color = 'var(--correct)';
+            if(choice === 'no' && correctAnswer === 'no') {
+                feedback.innerText = "Richtig! Zu informell für diesen Kontext.";
+            }
+        } else {
+            button.classList.add('selected-wrong');
+            feedback.style.display = 'block';
+            feedback.style.color = 'var(--wrong)';
+            feedback.innerText = "Leider falsch. Überlege nochmal, wie formell die Situation ist.";
+        }
+    }
+
+    function resetQuiz() {
+        const buttons = document.querySelectorAll('.button-group button');
+        const feedbacks = document.querySelectorAll('.feedback');
+        const cards = document.querySelectorAll('.scenario-card');
+
+        buttons.forEach(btn => {
+            btn.classList.remove('selected-correct', 'selected-wrong');
+            btn.style.pointerEvents = 'auto';
+        });
+
+        feedbacks.forEach(fb => {
+            fb.style.display = 'none';
+        });
+
+        // Setze Standardtexte zurück
+        document.querySelectorAll('.scenario-card').forEach((card, index) => {
+            const fb = card.querySelector('.feedback');
+            if(index === 0) fb.innerText = "Richtig! Unter Freunden ist dieser umgangssprachliche Ausdruck perfekt.";
+            if(index === 1) fb.innerText = "Richtig! Das Wort ist zu informell (Slang) für ein offizielles Gespräch.";
+            if(index === 2) fb.innerText = "Genau! In informellen Textnachrichten wird es sehr häufig genutzt.";
+            if(index === 3) fb.innerText = "Richtig! Gegenüber Beamten sollte man eher förmlich sprechen.";
+        });
+    }
+</script>
+
+</body>
+</html>
