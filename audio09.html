@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio-Quiz: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --correct: #27ae60;
+            --wrong: #e74c3c;
+            --bg: #f9f9fb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h2 { text-align: center; color: var(--primary); }
+        .instruction { text-align: center; color: #666; margin-bottom: 30px; }
+
+        .quiz-card {
+            background: #fff;
+            border: 2px solid #edf2f7;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .play-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .play-btn:hover { transform: scale(1.1); background: var(--secondary); }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 400px) {
+            .options { grid-template-columns: 1fr; }
+        }
+
+        .option-btn {
+            padding: 12px;
+            border: 2px solid #edf2f7;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .option-btn.correct { background: var(--correct); color: white; border-color: var(--correct); }
+        .option-btn.wrong { background: var(--wrong); color: white; border-color: var(--wrong); }
+
+        .feedback-text {
+            margin-top: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 25px;
+            background: #dfe6e9;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #2d3436;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Audio-Quiz: Emotionen</h2>
+    <p class="instruction">Klicke auf Play und höre genau hin. Welche Emotion hörst du?</p>
+
+    <div id="quiz-container">
+        <!-- Aufgabe 1 -->
+        <div class="quiz-card" data-answer="freude">
+            <button class="play-btn" onclick="speak('Прикинь, Маша поступила в университет!', 1.2, 1.1)">▶</button>
+            <div class="options">
+                <button class="option-btn" onclick="check(this, 'freude')">Freudige Überraschung</button>
+                <button class="option-btn" onclick="check(this, 'ärger')">Ärger / Frust</button>
+            </div>
+            <div class="feedback-text"></div>
+        </div>
+
+        <!-- Aufgabe 2 -->
+        <div class="quiz-card" data-answer="ärger">
+            <button class="play-btn" onclick="speak('Прикинь, в этом магазине нет хлеба.', 0.8, 0.9)">▶</button>
+            <div class="options">
+                <button class="option-btn" onclick="check(this, 'freude')">Freudige Überraschung</button>
+                <button class="option-btn" onclick="check(this, 'ärger')">Ärger / Frust</button>
+            </div>
+            <div class="feedback-text"></div>
+        </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetQuiz()">Übung Neustarten</button>
+</div>
+
+<script>
+    // Web Speech API Funktion
+    function speak(text, pitch, rate) {
+        // Stop alle laufenden Sprachausgaben
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU';
+        utterance.pitch = pitch; // Höher = fröhlicher, Tiefer = genervter
+        utterance.rate = rate;   // Geschwindigkeit
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function check(btn, choice) {
+        const card = btn.closest('.quiz-card');
+        const correctAnswer = card.getAttribute('data-answer');
+        const feedback = card.querySelector('.feedback-text');
+        const allBtns = card.querySelectorAll('.option-btn');
+
+        // Deaktiviere Buttons in dieser Karte
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        if (choice === correctAnswer) {
+            btn.classList.add('correct');
+            feedback.innerText = "Richtig! Gut gehört.";
+            feedback.style.color = "var(--correct)";
+        } else {
+            btn.classList.add('wrong');
+            feedback.innerText = "Nicht ganz. Achte auf die Tonhöhe.";
+            feedback.style.color = "var(--wrong)";
+        }
+    }
+
+    function resetQuiz() {
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.classList.remove('correct', 'wrong');
+            btn.style.pointerEvents = 'auto';
+        });
+        document.querySelectorAll('.feedback-text').forEach(f => f.innerText = "");
+        window.speechSynthesis.cancel();
+    }
+
+    // Prüfen ob russische Stimme verfügbar ist
+    window.speechSynthesis.onvoiceschanged = function() {
+        const voices = window.speechSynthesis.getVoices();
+        const ruVoice = voices.find(v => v.lang.startsWith('ru'));
+        if (!ruVoice) {
+            console.warn("Russische Stimme nicht gefunden. Browser-Standard wird genutzt.");
+        }
+    };
+</script>
+
+</body>
+</html>
