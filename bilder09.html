@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bild-Matching: ПРИКИНЬ (Fix)</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --correct: #27ae60;
+            --wrong: #e74c3c;
+            --bg: #f0f4f8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        p.desc { text-align: center; color: #666; margin-bottom: 25px; }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .game-board { grid-template-columns: 1fr; }
+        }
+
+        .emotion-card {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .emoji {
+            font-size: 50px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .emotion-label {
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .drop-zone {
+            min-height: 100px;
+            background: #f9f9f9;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .sentence-pool {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e1e8ed;
+            border-radius: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 50px;
+        }
+
+        .draggable-sentence {
+            background: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: grab;
+            font-size: 0.95em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .card-correct { border-color: var(--correct) !important; background-color: #f0fff4; }
+        .card-wrong { border-color: var(--wrong) !important; background-color: #fff5f5; }
+
+        .btn-reset {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 40px;
+            background: #636e72;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Gefühle & ПРИКИНЬ</h2>
+    <p class="desc">Ordne die Sätze zu. Bei einem Neustart wird alles geleert und neu gemischt.</p>
+
+    <div class="game-board">
+        <div class="emotion-card" id="card-surprise" data-match="surprise">
+            <span class="emoji">😲</span>
+            <span class="emotion-label">Positive Überraschung</span>
+            <div class="drop-zone" id="zone-surprise"></div>
+        </div>
+
+        <div class="emotion-card" id="card-disappoint" data-match="disappoint">
+            <span class="emoji">😒</span>
+            <span class="emotion-label">Enttäuschung / Ärger</span>
+            <div class="drop-zone" id="zone-disappoint"></div>
+        </div>
+
+        <div class="emotion-card" id="card-unbelievable" data-match="unbelievable">
+            <span class="emoji">🤨</span>
+            <span class="emotion-label">Ungläubigkeit</span>
+            <div class="drop-zone" id="zone-unbelievable"></div>
+        </div>
+    </div>
+
+    <div class="sentence-pool" id="pool"></div>
+
+    <button class="btn-reset" onclick="resetGame()">Neustart & Mischen</button>
+</div>
+
+<script>
+    const pool = document.getElementById('pool');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    let selectedNode = null;
+
+    const sentenceData = [
+        { id: 's1', text: 'ПРИКИНЬ, Маша поступила в университет!', type: 'surprise' },
+        { id: 's2', text: 'ПРИКИНЬ, в этом магазине нет хлеба!', type: 'disappoint' },
+        { id: 's3', text: 'ПРИКИНЬ, я думал, что она глупая.', type: 'unbelievable' }
+    ];
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initPool() {
+        pool.innerHTML = '';
+        const shuffled = shuffle([...sentenceData]);
+        shuffled.forEach(data => {
+            const div = document.createElement('div');
+            div.className = 'draggable-sentence';
+            div.draggable = true;
+            div.id = data.id;
+            div.dataset.type = data.type;
+            div.innerText = data.text;
+            
+            div.addEventListener('dragstart', () => div.classList.add('dragging'));
+            div.addEventListener('dragend', () => div.classList.remove('dragging'));
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(selectedNode) selectedNode.style.outline = "none";
+                selectedNode = div;
+                div.style.outline = "4px solid orange";
+            });
+            
+            pool.appendChild(div);
+        });
+    }
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            const dragging = document.querySelector('.dragging');
+            if (dragging) handlePlacement(zone, dragging);
+        });
+
+        zone.addEventListener('click', () => {
+            if (selectedNode) {
+                handlePlacement(zone, selectedNode);
+                selectedNode.style.outline = "none";
+                selectedNode = null;
+            }
+        });
+    });
+
+    function handlePlacement(zone, element) {
+        if (zone.children.length > 0) {
+            pool.appendChild(zone.children[0]);
+        }
+        zone.appendChild(element);
+        updateFeedback();
+    }
+
+    function updateFeedback() {
+        document.querySelectorAll('.emotion-card').forEach(card => {
+            const zone = card.querySelector('.drop-zone');
+            const element = zone.querySelector('.draggable-sentence');
+            
+            if (!element) {
+                card.classList.remove('card-correct', 'card-wrong');
+                return;
+            }
+
+            const expected = card.getAttribute('data-match');
+            const actual = element.getAttribute('data-type');
+            
+            if (actual === expected) {
+                card.classList.add('card-correct');
+                card.classList.remove('card-wrong');
+            } else {
+                card.classList.add('card-wrong');
+                card.classList.remove('card-correct');
+            }
+        });
+    }
+
+    function resetGame() {
+        // 1. Alle Sätze aus den Zonen entfernen
+        dropZones.forEach(zone => {
+            zone.innerHTML = '';
+        });
+
+        // 2. Karten-Styles zurücksetzen
+        document.querySelectorAll('.emotion-card').forEach(c => {
+            c.classList.remove('card-correct', 'card-wrong');
+        });
+
+        // 3. Pool neu mischen und befüllen
+        selectedNode = null;
+        initPool();
+    }
+
+    // Erster Start
+    initPool();
+</script>
+
+</body>
+</html>
