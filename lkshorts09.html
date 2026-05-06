@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vokabel-Trainer: Russisch</title>
+    <style>
+        :root {
+            --primary-green: #2d5a27;
+            --light-green: #eaf4e9;
+            --accent-green: #4caf50;
+            --text-color: #333;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-green);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+
+        /* 3D Flip Card Styles */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 350px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 15px;
+            background: var(--card-bg);
+            border: 4px solid var(--accent-green);
+        }
+
+        .card-face-back {
+            transform: rotateY(180deg);
+            background-color: #f9f9f9;
+        }
+
+        .vocab-text {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        .note-text {
+            font-size: 1rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Button Styles */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .nav-buttons {
+            grid-column: span 2;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-green);
+            color: white;
+            transition: background 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--accent-green);
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+        .btn-secondary {
+            background-color: #637d60;
+        }
+
+        @media (max-width: 480px) {
+            .card-container { height: 300px; }
+            .vocab-text { font-size: 1.6rem; }
+            .controls { grid-template-columns: 1fr; }
+            .nav-buttons { flex-direction: row; width: 100%; }
+            .nav-buttons button { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Vokabel-Trainer</h1>
+        <div class="progress" id="progress">1 / 40</div>
+
+        <div class="card-container" id="cardContainer">
+            <div class="card" id="card">
+                <div class="card-face card-face-front">
+                    <div class="vocab-text" id="frontText">...</div>
+                    <div class="note-text" id="frontNote"></div>
+                </div>
+                <div class="card-face card-face-back">
+                    <div class="vocab-text" id="backText">...</div>
+                    <div class="note-text" id="backNote"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button id="prevBtn">← Vorherige</button>
+                <button id="nextBtn">Nächste →</button>
+            </div>
+            <button id="shuffleBtn" class="btn-secondary">🔀 Mischen</button>
+            <button id="startBtn" class="btn-secondary">🏠 An den Anfang</button>
+        </div>
+    </div>
+
+    <script>
+        // Vokabeldaten
+        const rawVocab = [
+            ["1. прики́нуть (SV) / прики́дывать (NSV)", "schätzen, überlegen, sich mal vorstellen"],
+            ["2. магази́н", "das Geschäft, der Laden"],
+            ["3. хлеб", "das Brot"],
+            ["4. нет", "es gibt kein / nicht da sein"],
+            ["5. поступи́ть (SV) / поступа́ть (NSV)", "(eine Bildungseinrichtung) betreten, aufgenommen werden"],
+            ["6. университе́т", "die Universität"],
+            ["7. ду́мать (NSV) / поду́мать (SV)", "denken, glauben"],
+            ["8. глу́пый", "dumm"],
+            ["9. у́мный", "klug"],
+            ["10. зна́чить (NSV)", "bedeuten"],
+            ["11. предста́вить (SV) / представля́ть (NSV)", "sich vorstellen"],
+            ["12. ча́сто", "oft"],
+            ["13. речь", "die Sprache, die Rede"],
+            ["14. носи́тель", "der Muttersprachler (Träger der Sprache)"],
+            ["15. услы́шать (SV) / слы́шать (NSV)", "hören"],
+            ["16. испо́льзовать (NSV/SV)", "benutzen, verwenden"],
+            ["17. сло́во", "das Wort"],
+            ["18. шеф", "der Chef"],
+            ["19. дире́ктор", "der Direktor"],
+            ["20. ба́бушка", "die Großmutter, die Oma"],
+            ["21. внук", "der Enkel"],
+            ["22. оши́бка", "der Fehler"],
+            ["23. найти́ (SV) / находи́ть (NSV)", "finden"],
+            ["24. ситуа́ция", "die Situation"],
+            ["25. официа́льный", "offiziell, formell"],
+            ["26. разгово́рный", "umgangssprachlich"],
+            ["27. забы́ть (SV) / забыва́ть (NSV)", "vergessen"],
+            ["28. прийти́ (SV) / приходи́ть (NSV)", "kommen, ankommen"],
+            ["29. вы́играть (SV) / выи́грывать (NSV)", "gewinnen"],
+            ["30. потеря́ть (SV) / теря́ть (NSV)", "verlieren"],
+            ["31. па́спорт", "der Reisepass"],
+            ["32. получи́ть (SV) / получа́ть (NSV)", "erhalten, bekommen"],
+            ["33. пятёрка", "eine Eins (beste Note im russischen Schulsystem)"],
+            ["34. учи́тель", "der Lehrer"],
+            ["35. тетра́дь", "das Heft"],
+            ["36. зако́нчить (SV) / зака́нчивать (NSV)", "beenden, fertigstellen"],
+            ["37. отчёт", "der Bericht"],
+            ["38. позвони́ть (SV) / звони́ть (NSV)", "anrufen"],
+            ["39. понима́ть (NSV) / поня́ть (SV)", "verstehen"],
+            ["40. Ма́ша", "Mascha (Eigenname)"]
+        ];
+
+        let vocabList = [...rawVocab];
+        let currentIndex = 0;
+
+        const card = document.getElementById('card');
+        const cardContainer = document.getElementById('cardContainer');
+        const frontText = document.getElementById('frontText');
+        const backText = document.getElementById('backText');
+        const progress = document.getElementById('progress');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const startBtn = document.getElementById('startBtn');
+
+        // Initialisierung
+        function updateCard() {
+            card.classList.remove('is-flipped');
+            
+            setTimeout(() => {
+                const item = vocabList[currentIndex];
+                frontText.innerText = item[0];
+                backText.innerText = item[1];
+                
+                // Dynamische Schriftgröße
+                adjustFontSize(frontText);
+                adjustFontSize(backText);
+                
+                progress.innerText = `${currentIndex + 1} / ${vocabList.length}`;
+            }, card.classList.contains('is-flipped') ? 0 : 0);
+        }
+
+        function adjustFontSize(element) {
+            const length = element.innerText.length;
+            if (length > 50) {
+                element.style.fontSize = "1.2rem";
+            } else if (length > 25) {
+                element.style.fontSize = "1.5rem";
+            } else {
+                element.style.fontSize = "2.2rem";
+            }
+        }
+
+        function flipCard() {
+            card.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < vocabList.length - 1) {
+                currentIndex++;
+                updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = vocabList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [vocabList[i], vocabList[j]] = [vocabList[j], vocabList[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function goToStart() {
+            currentIndex = 0;
+            updateCard();
+        }
+
+        // Event Listener Buttons
+        cardContainer.addEventListener('click', flipCard);
+        nextBtn.addEventListener('click', nextCard);
+        prevBtn.addEventListener('click', prevCard);
+        shuffleBtn.addEventListener('click', shuffleCards);
+        startBtn.addEventListener('click', goToStart);
+
+        // Event Listener Tastatur
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault(); // Verhindert Scrollen bei Leertaste
+                flipCard();
+            } else if (e.key === 'ArrowRight') {
+                nextCard();
+            } else if (e.key === 'ArrowLeft') {
+                prevCard();
+            } else if (e.key === 'Home') {
+                goToStart();
+            }
+        });
+
+        // Start der App
+        updateCard();
+    </script>
+</body>
+</html>
