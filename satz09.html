@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satz-Puzzle: ПРИКИНЬ Profi</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .progress { text-align: center; font-size: 0.9em; color: #888; margin-bottom: 20px; }
+
+        .sentence-display {
+            min-height: 80px;
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #fff;
+        }
+
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 100px;
+            padding: 10px;
+            background: #f0f2f5;
+            border-radius: 12px;
+        }
+
+        .word {
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+        }
+
+        .word.correct {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+            cursor: default;
+        }
+
+        .word.wrong {
+            background-color: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .btn-restart { background: #636e72; color: white; }
+        .btn-next { background: var(--primary); color: white; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Satz-Puzzle</h2>
+    <div class="progress" id="progress-text">Satz 1 von 6</div>
+
+    <div class="sentence-display" id="target-zone"></div>
+    <div class="word-pool" id="pool-zone"></div>
+
+    <div class="controls">
+        <button class="btn-restart" onclick="restartCurrent()">Satz neu mischen</button>
+        <button class="btn-next" id="next-btn" onclick="nextSentence()">Nächster Satz</button>
+        <button class="btn-restart" id="full-reset" style="display:none" onclick="fullReset()">Ganze Übung Neustarten</button>
+    </div>
+</div>
+
+<script>
+    const sentences = [
+        ["ПРИКИНЬ,", "в", "этом", "магазине", "нет", "хлеба!"],
+        ["ПРИКИНЬ,", "Маша", "поступила", "в", "университет!"],
+        ["Я", "думал,", "что", "она", "глупая."],
+        ["Слово", "ПРИКИНЬ", "значит", "представляешь."],
+        ["Часто", "в", "речи", "носителей", "можно", "услышать", "ПРИКИНЬ."],
+        ["Используете", "ли", "вы", "это", "слово", "в", "речи?"]
+    ];
+
+    let currentLevel = 0;
+    let currentIndex = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initLevel() {
+        const poolZone = document.getElementById('pool-zone');
+        const targetZone = document.getElementById('target-zone');
+        const nextBtn = document.getElementById('next-btn');
+        const progress = document.getElementById('progress-text');
+        
+        poolZone.innerHTML = '';
+        targetZone.innerHTML = '';
+        nextBtn.style.display = 'none';
+        currentIndex = 0;
+        
+        progress.innerText = `Satz ${currentLevel + 1} von ${sentences.length}`;
+
+        const shuffledWords = shuffle([...sentences[currentLevel]]);
+
+        shuffledWords.forEach(wordText => {
+            const wordEl = document.createElement('div');
+            wordEl.className = 'word';
+            wordEl.innerText = wordText;
+            wordEl.onclick = () => handleWordClick(wordEl, wordText);
+            poolZone.appendChild(wordEl);
+        });
+    }
+
+    function handleWordClick(element, text) {
+        if (element.classList.contains('correct')) return;
+
+        const targetZone = document.getElementById('target-zone');
+        const currentSentence = sentences[currentLevel];
+
+        if (text === currentSentence[currentIndex]) {
+            element.classList.add('correct');
+            targetZone.appendChild(element);
+            currentIndex++;
+            
+            if (currentIndex === currentSentence.length) {
+                if (currentLevel < sentences.length - 1) {
+                    document.getElementById('next-btn').style.display = 'block';
+                } else {
+                    document.getElementById('progress-text').innerText = "Super! Alle Sätze geschafft.";
+                    document.getElementById('full-reset').style.display = 'block';
+                }
+            }
+        } else {
+            element.classList.add('wrong');
+            setTimeout(() => element.classList.remove('wrong'), 500);
+        }
+    }
+
+    function nextSentence() {
+        currentLevel++;
+        initLevel();
+    }
+
+    function restartCurrent() {
+        initLevel();
+    }
+
+    function fullReset() {
+        currentLevel = 0;
+        document.getElementById('full-reset').style.display = 'none';
+        initLevel();
+    }
+
+    initLevel();
+</script>
+
+</body>
+</html>
