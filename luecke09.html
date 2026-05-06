@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lückentext: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        .instruction { text-align: center; color: #636e72; margin-bottom: 30px; line-height: 1.5; }
+
+        .sentence-box {
+            background: #fff;
+            border-left: 5px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            line-height: 2;
+        }
+
+        .sentence-text {
+            font-size: 1.1em;
+            color: var(--text);
+        }
+
+        select {
+            padding: 8px 12px;
+            font-size: 1em;
+            font-weight: bold;
+            border: 2px solid #dfe6e9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+
+        select.correct {
+            border-color: var(--success);
+            background-color: #e8f5e9;
+            color: var(--success);
+        }
+
+        select.wrong {
+            border-color: var(--error);
+            background-color: #ffebee;
+            color: var(--error);
+        }
+
+        .explanation {
+            font-size: 0.85em;
+            margin-top: 10px;
+            display: none;
+            font-style: italic;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 35px;
+            background: #636e72;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .reset-btn:hover { background: #2d3436; }
+
+        @media (max-width: 600px) {
+            .sentence-text { font-size: 1em; }
+            select { width: 100%; margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Lückentext-Training</h2>
+    <p class="instruction">Wähle das passende Wort für die Lücke aus. Achte auf den Sinn des Satzes!</p>
+
+    <div id="quiz-area">
+        <!-- Satz 1 -->
+        <div class="sentence-box">
+            <div class="sentence-text">
+                1. <select onchange="check(this, 'ПРИКИНЬ')">
+                    <option value="">...</option>
+                    <option value="ПРИВЕТ">ПРИВЕТ</option>
+                    <option value="ПРИКИНЬ">ПРИКИНЬ</option>
+                    <option value="ПОКА">ПОКА</option>
+                </select>, Маша поступила в университет!
+            </div>
+            <div class="explanation">Richtig! „Stell dir vor“ leitet die Überraschung ein.</div>
+        </div>
+
+        <!-- Satz 2 -->
+        <div class="sentence-box">
+            <div class="sentence-text">
+                2. В этом магазине <select onchange="check(this, 'нет')">
+                    <option value="">...</option>
+                    <option value="есть">есть</option>
+                    <option value="нет">нет</option>
+                    <option value="был">был</option>
+                </select> хлеба! ПРИКИНЬ!
+            </div>
+            <div class="explanation">Richtig! „Es gibt kein Brot“ ist die Nachricht, die erstaunt.</div>
+        </div>
+
+        <!-- Satz 3 -->
+        <div class="sentence-box">
+            <div class="sentence-text">
+                3. Я думал, что она <select onchange="check(this, 'глупая')">
+                    <option value="">...</option>
+                    <option value="умная">умная</option>
+                    <option value="глупая">глупая</option>
+                    <option value="красивая">красивая</option>
+                </select>.
+            </div>
+            <div class="explanation">Richtig! Das war die falsche Vermutung über Mascha.</div>
+        </div>
+
+        <!-- Satz 4 -->
+        <div class="sentence-box">
+            <div class="sentence-text">
+                4. ПРИКИНЬ значит <select onchange="check(this, 'представляешь')">
+                    <option value="">...</option>
+                    <option value="представляешь">представляешь</option>
+                    <option value="приветствуешь">приветствуешь</option>
+                    <option value="понимаешь">понимаешь</option>
+                </select>.
+            </div>
+            <div class="explanation">Richtig! Das ist die exakte Bedeutung des Wortes.</div>
+        </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetQuiz()">Übung Neustarten</button>
+</div>
+
+<script>
+    function check(selectElement, correctAnswer) {
+        const explanation = selectElement.parentElement.nextElementSibling;
+        
+        if (selectElement.value === correctAnswer) {
+            selectElement.className = 'correct';
+            explanation.style.display = 'block';
+            explanation.style.color = 'var(--success)';
+            explanation.innerHTML = '✔ Richtig!';
+        } else if (selectElement.value === "") {
+            selectElement.className = '';
+            explanation.style.display = 'none';
+        } else {
+            selectElement.className = 'wrong';
+            explanation.style.display = 'block';
+            explanation.style.color = 'var(--error)';
+            explanation.innerHTML = '✘ Versuchs noch einmal.';
+        }
+    }
+
+    function resetQuiz() {
+        const selects = document.querySelectorAll('select');
+        const explanations = document.querySelectorAll('.explanation');
+        
+        selects.forEach(s => {
+            s.value = "";
+            s.className = "";
+        });
+        
+        explanations.forEach(e => {
+            e.style.display = 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
