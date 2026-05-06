@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory: ПРИКИНЬ</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #2c3e50;
+            --card-back: #34495e;
+            --card-front: #ffffff;
+            --bg: #f0f2f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 { color: var(--secondary); margin-bottom: 10px; }
+        .info { color: #666; margin-bottom: 20px; text-align: center; }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            perspective: 1000px;
+        }
+
+        /* Responsive Anpassung */
+        @media (max-width: 480px) {
+            .memory-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .memory-card {
+            height: 100px;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s, opacity 0.8s;
+        }
+
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            color: var(--secondary);
+            transform: rotateY(180deg);
+            border: 2px solid var(--primary);
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover { background-color: #357abd; }
+    </style>
+</head>
+<body>
+
+    <h2>Memory: Bedeutungspaare</h2>
+    <p class="info">Finde die passenden Paare zwischen Russisch und Deutsch!</p>
+
+    <div class="memory-grid" id="grid"></div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Neustart</button>
+    </div>
+
+<script>
+    const pairs = [
+        { ru: "ПРИКИНЬ", de: "Stell dir mal vor" },
+        { ru: "Прикинь, я забыл!", de: "Echt jetzt, ich hab's vergessen!" },
+        { ru: "Прикинь, она пришла.", de: "Überleg mal, sie ist gekommen." },
+        { ru: "Прикинь, хлеба нет.", de: "Denk mal an, es gibt kein Brot." },
+        { ru: "Прикинь, я выиграл!", de: "Wahnsinn, ich habe gewonnen!" },
+        { ru: "Да прикинь ты!", de: "Jetzt stell dir das mal vor!" }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let lockBoard = false;
+
+    function createBoard() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        
+        // Karten verdoppeln und mischen
+        let gameItems = [];
+        pairs.forEach(p => {
+            gameItems.push({ text: p.ru, matchId: p.ru });
+            gameItems.push({ text: p.de, matchId: p.ru }); // Gleiche ID für russisch und deutsch
+        });
+        
+        gameItems.sort(() => Math.random() - 0.5);
+
+        gameItems.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'memory-card';
+            card.dataset.match = item.matchId;
+            
+            card.innerHTML = `
+                <div class="card-face card-back">?</div>
+                <div class="card-face card-front">${item.text}</div>
+            `;
+            
+            card.addEventListener('click', flipCard);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard() {
+        if (lockBoard) return;
+        if (this === flippedCards[0]) return;
+
+        this.classList.add('flipped');
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        let isMatch = flippedCards[0].dataset.match === flippedCards[1].dataset.match;
+
+        if (isMatch) {
+            disableCards();
+        } else {
+            unflipCards();
+        }
+    }
+
+    function disableCards() {
+        lockBoard = true;
+        // Langsam ausblenden nach dem Finden
+        setTimeout(() => {
+            flippedCards.forEach(card => card.classList.add('matched'));
+            resetTurn();
+        }, 800);
+    }
+
+    function unflipCards() {
+        lockBoard = true;
+        setTimeout(() => {
+            flippedCards.forEach(card => card.classList.remove('flipped'));
+            resetTurn();
+        }, 1200);
+    }
+
+    function resetTurn() {
+        flippedCards = [];
+        lockBoard = false;
+    }
+
+    function resetGame() {
+        flippedCards = [];
+        lockBoard = false;
+        const allCards = document.querySelectorAll('.memory-card');
+        allCards.forEach(card => {
+            card.classList.remove('flipped', 'matched');
+            card.style.opacity = "1"; // Falls Neustart während Fade-out
+        });
+        // Kurz warten für die Drehanimation, dann neu mischen
+        setTimeout(createBoard, 500);
+    }
+
+    // Initialstart
+    createBoard();
+</script>
+
+</body>
+</html>
